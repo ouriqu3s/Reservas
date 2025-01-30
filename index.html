@@ -146,7 +146,7 @@
                     tbody.appendChild(row);
                 });
             } catch (error) {
-                document.querySelector('#mesasTable tbody').innerHTML = `<tr><td colspan="4">Erro ao carregar mesas.</td></tr>`;
+                document.querySelector('#mesasTable tbody').innerHTML = `<tr><td colspan="4">Erro ao carregar mesas: ${error.message}</td></tr>`;
                 console.error('Erro ao carregar dados:', error);
             }
         }
