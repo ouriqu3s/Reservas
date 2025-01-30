@@ -44,7 +44,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease-in-out;
         }
 
         /* Tabela */
@@ -129,8 +129,12 @@
                 const clickX = e.clientX - rect.left;
                 const clickY = e.clientY - rect.top;
 
-                const deslocX = (clickX / rect.width - 0.5) * -200;
-                const deslocY = (clickY / rect.height - 0.5) * -200;
+                // Ajustar deslocamento baseado na posição do clique
+                const deslocX = ((clickX / rect.width) - 0.5) * -400;
+                const deslocY = ((clickY / rect.height) - 0.5) * -400;
+
+                imgX = deslocX;
+                imgY = deslocY;
 
                 mapaImg.style.transform = `scale(3) translate(${deslocX}px, ${deslocY}px)`;
                 mapaContainer.style.cursor = "grab";
