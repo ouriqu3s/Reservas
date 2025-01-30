@@ -23,7 +23,7 @@
             color: #333;
         }
 
-        /* Contêiner do mapa com barra de rolagem e movimentação */
+        /* Contêiner do mapa */
         .mapa-container {
             width: 100%;
             max-width: 1200px;
@@ -33,17 +33,18 @@
             margin: 20px auto;
             background-color: #fff;
             position: relative;
-            cursor: grab;
+            cursor: pointer;
         }
 
-        /* Imagem dentro do frame */
+        /* Imagem */
         .mapa-container img {
-            width: 2000px; /* Imagem maior para permitir zoom */
+            width: 100%;
             height: auto;
             display: block;
             position: absolute;
             top: 0;
             left: 0;
+            transition: transform 0.3s ease;
         }
 
         /* Tabela */
@@ -115,33 +116,42 @@
         const mapaContainer = document.getElementById("mapaContainer");
         const mapaImg = document.getElementById("mapaMesas");
 
+        let zoomAtivo = false;
         let isDragging = false;
-        let startX, startY, scrollLeft, scrollTop;
+        let startX, startY, imgX = 0, imgY = 0;
 
-        // Permite arrastar a imagem com o mouse
-        mapaContainer.addEventListener("mousedown", (e) => {
-            isDragging = true;
-            mapaContainer.style.cursor = "grabbing";
-            startX = e.pageX - mapaContainer.offsetLeft;
-            startY = e.pageY - mapaContainer.offsetTop;
-            scrollLeft = mapaContainer.scrollLeft;
-            scrollTop = mapaContainer.scrollTop;
+        // Alternar entre zoom normal e zoom 3x ao clicar
+        mapaContainer.addEventListener("click", () => {
+            zoomAtivo = !zoomAtivo;
+            if (zoomAtivo) {
+                mapaImg.style.transform = "scale(3)";
+                mapaContainer.style.cursor = "grab";
+            } else {
+                mapaImg.style.transform = "scale(1) translate(0, 0)";
+                imgX = 0;
+                imgY = 0;
+            }
         });
 
-        mapaContainer.addEventListener("mousemove", (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            const x = e.pageX - mapaContainer.offsetLeft;
-            const y = e.pageY - mapaContainer.offsetTop;
-            const walkX = (x - startX) * 1.5;
-            const walkY = (y - startY) * 1.5;
-            mapaContainer.scrollLeft = scrollLeft - walkX;
-            mapaContainer.scrollTop = scrollTop - walkY;
+        // Movimentação ao arrastar a imagem
+        mapaContainer.addEventListener("mousedown", (e) => {
+            if (!zoomAtivo) return;
+            isDragging = true;
+            startX = e.clientX - imgX;
+            startY = e.clientY - imgY;
+            mapaContainer.style.cursor = "grabbing";
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (!isDragging || !zoomAtivo) return;
+            imgX = e.clientX - startX;
+            imgY = e.clientY - startY;
+            mapaImg.style.transform = `scale(3) translate(${imgX}px, ${imgY}px)`;
         });
 
         document.addEventListener("mouseup", () => {
             isDragging = false;
-            mapaContainer.style.cursor = "grab";
+            mapaContainer.style.cursor = zoomAtivo ? "grab" : "pointer";
         });
 
         // Carregar dados da planilha
