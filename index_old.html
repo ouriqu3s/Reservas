@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva de Mesas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .mapa-container {
+            margin-bottom: 20px;
+        }
+        .mapa-container img {
+            width: 100%;
+            border-radius: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        .reservada {
+            background-color: #ff6666;
+            color: white;
+        }
+        .vaga {
+            background-color: #66cc66;
+            color: white;
+        }
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-reservar {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-reservar:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reserva de Mesas</h1>
+        <div class="mapa-container">
+            <img src="https://github.com/ouriqu3s/Reservas/blob/main/Captura%20de%20tela%202025-01-30%20004410.png?raw=true" 
+             id="mapaMesas" 
+             alt="Mapa das Mesas">
+        </div>
+        
+        <table id="mesasTable">
+            <thead>
+                <tr>
+                    <th>Mesa</th>
+                    <th>Nome</th>
+                    <th>Status</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="4">Carregando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQeFG0VtYXvHuPPdgrfPiuguENTw7NzfE-_IqfXe6XfBzfjeeEoMg-GeY11TgotDg4/exec";
+
+        function carregarDados() {
+            const script = document.createElement('script');
+            script.src = `${WEB_APP_URL}?action=read&callback=atualizarTabela`;
+            document.body.appendChild(script);
+        }
+
+        function atualizarTabela(response) {
+            const tbody = document.querySelector('#mesasTable tbody');
+            tbody.innerHTML = '';
+
+            if (response.status === 'success') {
+                response.data.forEach(mesa => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${mesa.numero}</td>
+                        <td>${mesa.nome}</td>
+                        <td class="${mesa.status.toLowerCase() === 'reservada' ? 'reservada' : 'vaga'}">${mesa.status}</td>
+                        <td>
+                            ${mesa.status.toLowerCase() === 'vaga' ? `<button class="btn-reservar" onclick="reservarMesa('${mesa.numero}')">Reservar</button>` : 'Indisponível'}
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="4">Erro ao carregar mesas: ${response.message}</td></tr>`;
+            }
+        }
+
+        function reservarMesa(numeroMesa) {
+            const nome = prompt(`Digite seu nome para reservar a mesa ${numeroMesa}:`);
+            if (nome) {
+                const script = document.createElement('script');
+                script.src = `${WEB_APP_URL}?action=reserve&numero=${numeroMesa}&nome=${encodeURIComponent(nome)}&callback=confirmarReserva`;
+                document.body.appendChild(script);
+            }
+        }
+
+        function confirmarReserva(response) {
+            if (response.status === 'success') {
+                alert(response.message);
+                carregarDados();
+            } else {
+                alert(`Erro ao reservar a mesa: ${response.message}`);
+            }
+        }
+
+        // Carrega os dados ao iniciar
+        carregarDados();
+    </script>
+</body>
+</html>
