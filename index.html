@@ -120,11 +120,19 @@
         let isDragging = false;
         let startX, startY, imgX = 0, imgY = 0;
 
-        // Alternar entre zoom normal e zoom 3x ao clicar
-        mapaContainer.addEventListener("click", () => {
+        // Alternar entre zoom normal e zoom 3x ao clicar e deslocar a imagem
+        mapaContainer.addEventListener("click", (e) => {
             zoomAtivo = !zoomAtivo;
+
             if (zoomAtivo) {
-                mapaImg.style.transform = "scale(3)";
+                const rect = mapaContainer.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+
+                const deslocX = (clickX / rect.width - 0.5) * -200;
+                const deslocY = (clickY / rect.height - 0.5) * -200;
+
+                mapaImg.style.transform = `scale(3) translate(${deslocX}px, ${deslocY}px)`;
                 mapaContainer.style.cursor = "grab";
             } else {
                 mapaImg.style.transform = "scale(1) translate(0, 0)";
