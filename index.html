@@ -134,7 +134,7 @@
         });
 
         // Movimentação ao arrastar a imagem
-        mapaContainer.addEventListener("mousedown", (e) => {
+        mapaImg.addEventListener("mousedown", (e) => {
             if (!zoomAtivo) return;
             isDragging = true;
             startX = e.clientX - imgX;
