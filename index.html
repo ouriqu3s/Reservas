@@ -23,107 +23,140 @@
             color: #333;
         }
 
-        /* Contêiner de zoom */
+        /* Contêiner do mapa com barra de rolagem */
         .mapa-container {
             width: 100%;
-            max-width: 1000px;
+            max-width: 1200px;
             height: 600px;
-            overflow: hidden;
-            position: relative;
+            overflow: auto;
             border: 2px solid #ccc;
             margin: 20px auto;
-            cursor: grab;
+            background-color: #fff;
         }
 
-        /* Imagem dentro do contêiner */
+        /* Imagem grande dentro do frame */
         .mapa-container img {
-            position: absolute;
-            width: 100%;
+            width: 2000px; /* Imagem maior para permitir zoom */
             height: auto;
-            cursor: grab;
+            display: block;
+            margin: auto;
         }
 
-        /* Botão de reset */
-        .btn-reset {
-            margin: 10px;
+        /* Tabela */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
             padding: 10px;
-            border: none;
-            background-color: #ff6600;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
             color: white;
-            cursor: pointer;
+        }
+        .reservada {
+            background-color: #ff6666;
+            color: white;
+        }
+        .vaga {
+            background-color: #66cc66;
+            color: white;
+        }
+        button {
+            padding: 8px 12px;
+            border: none;
             border-radius: 5px;
+            cursor: pointer;
             font-weight: bold;
         }
-
-        .btn-reset:hover {
-            background-color: #cc5500;
+        .btn-reservar {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-reservar:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Reserva de Mesas</h1>
-        
-        <button class="btn-reset" onclick="resetZoom()">Resetar Zoom</button>
 
-        <div class="mapa-container" id="mapaContainer">
+        <div class="mapa-container">
             <img id="mapaMesas" 
                  src="https://github.com/ouriqu3s/Reservas/blob/main/Captura%20de%20tela%202025-01-30%20004410.png?raw=true" 
                  alt="Mapa das Mesas">
         </div>
+
+        <table id="mesasTable">
+            <thead>
+                <tr>
+                    <th>Mesa</th>
+                    <th>Nome</th>
+                    <th>Status</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="4">Carregando...</td></tr>
+            </tbody>
+        </table>
     </div>
 
     <script>
-        const mapaContainer = document.getElementById("mapaContainer");
-        const mapaImg = document.getElementById("mapaMesas");
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQeFG0VtYXvHuPPdgrfPiuguENTw7NzfE-_IqfXe6XfBzfjeeEoMg-GeY11TgotDg4/exec";
 
-        let scale = 1;
-        let translateX = 0;
-        let translateY = 0;
-        let isDragging = false;
-        let startX, startY, imgX = 0, imgY = 0;
-
-        // Controle de Zoom com a Roda do Mouse
-        mapaContainer.addEventListener("wheel", (e) => {
-            e.preventDefault();
-            let scaleAmount = e.deltaY > 0 ? 0.9 : 1.1;
-            scale *= scaleAmount;
-            scale = Math.max(1, Math.min(scale, 3)); // Mantém o zoom entre 1x e 3x
-            updateTransform();
-        });
-
-        // Movimentação com clique do mouse
-        mapaContainer.addEventListener("mousedown", (e) => {
-            isDragging = true;
-            startX = e.clientX - imgX;
-            startY = e.clientY - imgY;
-            mapaContainer.style.cursor = "grabbing";
-        });
-
-        document.addEventListener("mousemove", (e) => {
-            if (!isDragging) return;
-            imgX = e.clientX - startX;
-            imgY = e.clientY - startY;
-            updateTransform();
-        });
-
-        document.addEventListener("mouseup", () => {
-            isDragging = false;
-            mapaContainer.style.cursor = "grab";
-        });
-
-        // Atualiza a transformação CSS da imagem
-        function updateTransform() {
-            mapaImg.style.transform = `translate(${imgX}px, ${imgY}px) scale(${scale})`;
+        function carregarDados() {
+            const script = document.createElement('script');
+            script.src = `${WEB_APP_URL}?action=read&callback=atualizarTabela`;
+            document.body.appendChild(script);
         }
 
-        // Reseta o zoom e a posição
-        function resetZoom() {
-            scale = 1;
-            imgX = 0;
-            imgY = 0;
-            updateTransform();
+        function atualizarTabela(response) {
+            const tbody = document.querySelector('#mesasTable tbody');
+            tbody.innerHTML = '';
+
+            if (response.status === 'success') {
+                response.data.forEach(mesa => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${mesa.numero}</td>
+                        <td>${mesa.nome}</td>
+                        <td class="${mesa.status.toLowerCase() === 'reservada' ? 'reservada' : 'vaga'}">${mesa.status}</td>
+                        <td>
+                            ${mesa.status.toLowerCase() === 'vaga' ? `<button class="btn-reservar" onclick="reservarMesa('${mesa.numero}')">Reservar</button>` : 'Indisponível'}
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="4">Erro ao carregar mesas: ${response.message}</td></tr>`;
+            }
         }
+
+        function reservarMesa(numeroMesa) {
+            const nome = prompt(`Digite seu nome para reservar a mesa ${numeroMesa}:`);
+            if (nome) {
+                const script = document.createElement('script');
+                script.src = `${WEB_APP_URL}?action=reserve&numero=${numeroMesa}&nome=${encodeURIComponent(nome)}&callback=confirmarReserva`;
+                document.body.appendChild(script);
+            }
+        }
+
+        function confirmarReserva(response) {
+            if (response.status === 'success') {
+                alert(response.message);
+                carregarDados();
+            } else {
+                alert(`Erro ao reservar a mesa: ${response.message}`);
+            }
+        }
+
+        // Carrega os dados ao iniciar
+        carregarDados();
     </script>
 </body>
 </html>
