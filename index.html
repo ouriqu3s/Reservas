@@ -12,7 +12,7 @@
             text-align: center;
         }
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 20px auto;
             padding: 20px;
             background: white;
@@ -23,25 +23,26 @@
             color: #333;
         }
 
-        /* Estilo para a imagem do mapa */
+        /* Estilo para o container da imagem */
         .mapa-container {
             width: 100%;
+            max-width: 1500px;
+            height: 600px;
             overflow: hidden;
             position: relative;
             margin-bottom: 20px;
+            border: 2px solid #ccc;
+            cursor: grab;
         }
 
         .mapa-container img {
-            width: 100%;
-            max-width: 1200px;
+            width: 1500px;
             height: auto;
             cursor: zoom-in;
             transition: transform 0.3s ease;
-        }
-
-        /* Zoom ao passar o mouse */
-        .mapa-container img:hover {
-            transform: scale(2);
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         /* Modal para exibir a imagem ampliada */
@@ -73,6 +74,7 @@
             cursor: pointer;
         }
 
+        /* Tabela */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -114,7 +116,7 @@
 <body>
     <div class="container">
         <h1>Reserva de Mesas</h1>
-        <div class="mapa-container">
+        <div class="mapa-container" id="mapaContainer">
             <img id="mapaMesas" 
                  src="https://github.com/ouriqu3s/Reservas/blob/main/Captura%20de%20tela%202025-01-30%20004410.png?raw=true" 
                  alt="Mapa das Mesas" 
@@ -203,6 +205,31 @@
         function fecharImagem() {
             document.getElementById("modalImagem").style.display = "none";
         }
+
+        // Permitir mover a imagem ao passar o mouse
+        let isDragging = false;
+        let startX, startY, imgX = 0, imgY = 0;
+        const mapaContainer = document.getElementById("mapaContainer");
+        const mapaImg = document.getElementById("mapaMesas");
+
+        mapaContainer.addEventListener("mousedown", (e) => {
+            isDragging = true;
+            startX = e.clientX - imgX;
+            startY = e.clientY - imgY;
+            mapaContainer.style.cursor = "grabbing";
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+            imgX = e.clientX - startX;
+            imgY = e.clientY - startY;
+            mapaImg.style.transform = `translate(${imgX}px, ${imgY}px) scale(3)`;
+        });
+
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+            mapaContainer.style.cursor = "grab";
+        });
 
         // Carrega os dados ao iniciar
         carregarDados();
