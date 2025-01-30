@@ -23,195 +23,76 @@
             color: #333;
         }
 
-        /* Estilo para o container da imagem */
+        /* Contêiner de zoom */
         .mapa-container {
             width: 100%;
-            max-width: 1500px;
+            max-width: 1000px;
             height: 600px;
             overflow: hidden;
             position: relative;
-            margin-bottom: 20px;
             border: 2px solid #ccc;
+            margin: 20px auto;
             cursor: grab;
         }
 
+        /* Imagem dentro do contêiner */
         .mapa-container img {
-            width: 1500px;
+            position: absolute;
+            width: 100%;
             height: auto;
-            cursor: zoom-in;
-            transition: transform 0.3s ease;
-            position: absolute;
-            top: 0;
-            left: 0;
+            cursor: grab;
         }
 
-        /* Modal para exibir a imagem ampliada */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.7);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal img {
-            max-width: 95%;
-            max-height: 95%;
-        }
-
-        .close {
-            position: absolute;
-            top: 20px;
-            right: 30px;
-            font-size: 30px;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
-        }
-
-        /* Tabela */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            border: 1px solid #ddd;
+        /* Botão de reset */
+        .btn-reset {
+            margin: 10px;
             padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-        .reservada {
-            background-color: #ff6666;
-            color: white;
-        }
-        .vaga {
-            background-color: #66cc66;
-            color: white;
-        }
-        button {
-            padding: 8px 12px;
             border: none;
-            border-radius: 5px;
+            background-color: #ff6600;
+            color: white;
             cursor: pointer;
+            border-radius: 5px;
             font-weight: bold;
         }
-        .btn-reservar {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-reservar:hover {
-            background-color: #0056b3;
+
+        .btn-reset:hover {
+            background-color: #cc5500;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Reserva de Mesas</h1>
+        
+        <button class="btn-reset" onclick="resetZoom()">Resetar Zoom</button>
+
         <div class="mapa-container" id="mapaContainer">
             <img id="mapaMesas" 
                  src="https://github.com/ouriqu3s/Reservas/blob/main/Captura%20de%20tela%202025-01-30%20004410.png?raw=true" 
-                 alt="Mapa das Mesas" 
-                 onclick="abrirImagem()">
+                 alt="Mapa das Mesas">
         </div>
-
-        <table id="mesasTable">
-            <thead>
-                <tr>
-                    <th>Mesa</th>
-                    <th>Nome</th>
-                    <th>Status</th>
-                    <th>Ação</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td colspan="4">Carregando...</td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Modal para exibir a imagem ampliada -->
-    <div id="modalImagem" class="modal" onclick="fecharImagem()">
-        <span class="close">&times;</span>
-        <img id="imagemModal" src="">
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQeFG0VtYXvHuPPdgrfPiuguENTw7NzfE-_IqfXe6XfBzfjeeEoMg-GeY11TgotDg4/exec";
-
-        function carregarDados() {
-            const script = document.createElement('script');
-            script.src = `${WEB_APP_URL}?action=read&callback=atualizarTabela`;
-            document.body.appendChild(script);
-        }
-
-        function atualizarTabela(response) {
-            const tbody = document.querySelector('#mesasTable tbody');
-            tbody.innerHTML = '';
-
-            if (response.status === 'success') {
-                response.data.forEach(mesa => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${mesa.numero}</td>
-                        <td>${mesa.nome}</td>
-                        <td class="${mesa.status.toLowerCase() === 'reservada' ? 'reservada' : 'vaga'}">${mesa.status}</td>
-                        <td>
-                            ${mesa.status.toLowerCase() === 'vaga' ? `<button class="btn-reservar" onclick="reservarMesa('${mesa.numero}')">Reservar</button>` : 'Indisponível'}
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } else {
-                tbody.innerHTML = `<tr><td colspan="4">Erro ao carregar mesas: ${response.message}</td></tr>`;
-            }
-        }
-
-        function reservarMesa(numeroMesa) {
-            const nome = prompt(`Digite seu nome para reservar a mesa ${numeroMesa}:`);
-            if (nome) {
-                const script = document.createElement('script');
-                script.src = `${WEB_APP_URL}?action=reserve&numero=${numeroMesa}&nome=${encodeURIComponent(nome)}&callback=confirmarReserva`;
-                document.body.appendChild(script);
-            }
-        }
-
-        function confirmarReserva(response) {
-            if (response.status === 'success') {
-                alert(response.message);
-                carregarDados();
-            } else {
-                alert(`Erro ao reservar a mesa: ${response.message}`);
-            }
-        }
-
-        function abrirImagem() {
-            const modal = document.getElementById("modalImagem");
-            const imagemModal = document.getElementById("imagemModal");
-            const imagemMapa = document.getElementById("mapaMesas");
-
-            imagemModal.src = imagemMapa.src;
-            modal.style.display = "flex";
-        }
-
-        function fecharImagem() {
-            document.getElementById("modalImagem").style.display = "none";
-        }
-
-        // Permitir mover a imagem ao passar o mouse
-        let isDragging = false;
-        let startX, startY, imgX = 0, imgY = 0;
         const mapaContainer = document.getElementById("mapaContainer");
         const mapaImg = document.getElementById("mapaMesas");
 
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let startX, startY, imgX = 0, imgY = 0;
+
+        // Controle de Zoom com a Roda do Mouse
+        mapaContainer.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            let scaleAmount = e.deltaY > 0 ? 0.9 : 1.1;
+            scale *= scaleAmount;
+            scale = Math.max(1, Math.min(scale, 3)); // Mantém o zoom entre 1x e 3x
+            updateTransform();
+        });
+
+        // Movimentação com clique do mouse
         mapaContainer.addEventListener("mousedown", (e) => {
             isDragging = true;
             startX = e.clientX - imgX;
@@ -223,7 +104,7 @@
             if (!isDragging) return;
             imgX = e.clientX - startX;
             imgY = e.clientY - startY;
-            mapaImg.style.transform = `translate(${imgX}px, ${imgY}px) scale(3)`;
+            updateTransform();
         });
 
         document.addEventListener("mouseup", () => {
@@ -231,8 +112,18 @@
             mapaContainer.style.cursor = "grab";
         });
 
-        // Carrega os dados ao iniciar
-        carregarDados();
+        // Atualiza a transformação CSS da imagem
+        function updateTransform() {
+            mapaImg.style.transform = `translate(${imgX}px, ${imgY}px) scale(${scale})`;
+        }
+
+        // Reseta o zoom e a posição
+        function resetZoom() {
+            scale = 1;
+            imgX = 0;
+            imgY = 0;
+            updateTransform();
+        }
     </script>
 </body>
 </html>
