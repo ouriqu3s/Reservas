@@ -65,28 +65,6 @@
         .btn-reservar:hover {
             background-color: #0056b3;
         }
-        #modalReserva {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
-            z-index: 1000;
-        }
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-        }
     </style>
 </head>
 <body>
@@ -109,31 +87,22 @@
             </tbody>
         </table>
     </div>
-    
-    <div class="modal-overlay" id="modalOverlay"></div>
-    <div id="modalReserva">
-        <p>Digite seu nome para reservar a mesa <span id="mesaSelecionada"></span>:</p>
-        <input type="text" id="nomeReserva">
-        <button onclick="confirmarReserva()">Confirmar</button>
-        <button onclick="fecharModal()">Cancelar</button>
-    </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwOV3uQ4x6dLkUqSZjGhgAI256bXhov0D2K8ixoLco7GWVN-HS02Wpp-k7Dljs-v_AM/exec";
-        let mesaSelecionada;
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQeFG0VtYXvHuPPdgrfPiuguENTw7NzfE-_IqfXe6XfBzfjeeEoMg-GeY11TgotDg4/exec";
 
-        async function carregarDados() {
-            try {
-                const tbody = document.querySelector('#mesasTable tbody');
-                tbody.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
-                
-                const response = await fetch(WEB_APP_URL);
-                if (!response.ok) throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
-                
-                const mesas = await response.json();
-                tbody.innerHTML = '';
-                
-                mesas.forEach(mesa => {
+        function carregarDados() {
+            const script = document.createElement('script');
+            script.src = `${WEB_APP_URL}?action=read&callback=atualizarTabela`;
+            document.body.appendChild(script);
+        }
+
+        function atualizarTabela(response) {
+            const tbody = document.querySelector('#mesasTable tbody');
+            tbody.innerHTML = '';
+
+            if (response.status === 'success') {
+                response.data.forEach(mesa => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${mesa.numero}</td>
@@ -145,56 +114,30 @@
                     `;
                     tbody.appendChild(row);
                 });
-            } catch (error) {
-                console.error('Erro ao carregar dados:', error);
+            } else {
+                tbody.innerHTML = `<tr><td colspan="4">Erro ao carregar mesas: ${response.message}</td></tr>`;
             }
         }
 
         function reservarMesa(numeroMesa) {
-            mesaSelecionada = numeroMesa;
-            document.getElementById('mesaSelecionada').textContent = numeroMesa;
-            document.getElementById('modalReserva').style.display = 'block';
-            document.getElementById('modalOverlay').style.display = 'block';
-        }
-
-        function fecharModal() {
-            document.getElementById('modalReserva').style.display = 'none';
-            document.getElementById('modalOverlay').style.display = 'none';
-        }
-
-        async function confirmarReserva() {
-            const nome = document.getElementById('nomeReserva').value.trim();
-            if (!nome) {
-                alert("Por favor, digite um nome.");
-                return;
-            }
-            fecharModal();
-            localStorage.setItem(`reserva_mesa_${mesaSelecionada}`, nome);
-            await enviarReserva(mesaSelecionada, nome);
-        }
-
-        async function enviarReserva(numeroMesa, nome) {
-            try {
-                await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ numero: numeroMesa, nome: nome })
-                });
-                setTimeout(() => verificarReservaSalva(numeroMesa, nome), 3000);
-            } catch (error) {
-                console.error('Erro ao reservar mesa:', error);
+            const nome = prompt(`Digite seu nome para reservar a mesa ${numeroMesa}:`);
+            if (nome) {
+                const script = document.createElement('script');
+                script.src = `${WEB_APP_URL}?action=reserve&numero=${numeroMesa}&nome=${encodeURIComponent(nome)}&callback=confirmarReserva`;
+                document.body.appendChild(script);
             }
         }
 
-        function verificarReservaSalva(numeroMesa, nome) {
-            const nomeSalvo = localStorage.getItem(`reserva_mesa_${numeroMesa}`);
-            if (nomeSalvo === nome) {
-                console.log(`Reserva da mesa ${numeroMesa} confirmada.`);
+        function confirmarReserva(response) {
+            if (response.status === 'success') {
+                alert(response.message);
+                carregarDados();
             } else {
-                console.warn(`Reserva da mesa ${numeroMesa} pode não ter sido salva corretamente.`);
+                alert(`Erro ao reservar a mesa: ${response.message}`);
             }
         }
 
+        // Carrega os dados ao iniciar
         carregarDados();
     </script>
 </body>
