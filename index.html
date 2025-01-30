@@ -120,7 +120,7 @@
         let isDragging = false;
         let startX, startY, imgX = 0, imgY = 0;
 
-        // Alternar entre zoom normal e zoom 3x ao clicar e deslocar a imagem
+        // Alternar entre zoom normal e zoom 3x ao clicar e deslocar a imagem imediatamente
         mapaContainer.addEventListener("click", (e) => {
             zoomAtivo = !zoomAtivo;
 
@@ -130,40 +130,27 @@
                 const clickY = e.clientY - rect.top;
 
                 // Ajustar deslocamento baseado na posição do clique
-                const deslocX = ((clickX / rect.width) - 0.5) * -400;
-                const deslocY = ((clickY / rect.height) - 0.5) * -400;
+                imgX = ((clickX / rect.width) - 0.5) * -400;
+                imgY = ((clickY / rect.height) - 0.5) * -400;
 
-                imgX = deslocX;
-                imgY = deslocY;
-
-                mapaImg.style.transform = `scale(3) translate(${deslocX}px, ${deslocY}px)`;
+                mapaImg.style.transform = `scale(3) translate(${imgX}px, ${imgY}px)`;
                 mapaContainer.style.cursor = "grab";
+                isDragging = true; // Já ativa o movimento ao mover o mouse
             } else {
                 mapaImg.style.transform = "scale(1) translate(0, 0)";
                 imgX = 0;
                 imgY = 0;
+                isDragging = false;
             }
         });
 
-        // Movimentação ao arrastar a imagem
-        mapaImg.addEventListener("mousedown", (e) => {
+        // Movimentação ao mover o mouse imediatamente após o clique
+        mapaContainer.addEventListener("mousemove", (e) => {
             if (!zoomAtivo) return;
-            isDragging = true;
-            startX = e.clientX - imgX;
-            startY = e.clientY - imgY;
-            mapaContainer.style.cursor = "grabbing";
-        });
 
-        document.addEventListener("mousemove", (e) => {
-            if (!isDragging || !zoomAtivo) return;
-            imgX = e.clientX - startX;
-            imgY = e.clientY - startY;
+            imgX += e.movementX;
+            imgY += e.movementY;
             mapaImg.style.transform = `scale(3) translate(${imgX}px, ${imgY}px)`;
-        });
-
-        document.addEventListener("mouseup", () => {
-            isDragging = false;
-            mapaContainer.style.cursor = zoomAtivo ? "grab" : "pointer";
         });
 
         // Carregar dados da planilha
